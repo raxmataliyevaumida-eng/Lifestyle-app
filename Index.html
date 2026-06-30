@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sog'lom Lifestyle Rejasi</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        function App() {
+            const [currentDay, setCurrentDay] = useState(0);
+            const [completedTasks, setCompletedTasks] = useState(() => {
+                const saved = localStorage.getItem('completedTasks');
+                return saved ? JSON.parse(saved) : {};
+            });
+            const [editingIdx, setEditingIdx] = useState(null);
+            const [editData, setEditData] = useState(null);
+
+            const days = ['CHORSHANBA', 'PAYSHANBA', 'JUMA', 'SHANBA', 'YAXSHANBA', 'DUSHANBA', 'SEYSHANBA'];
+            
+            const defaultSchedule = [
+                { day: 0, activities: [
+                    { time: '04:15', activity: 'Bomdod namozi', detail: 'Uyg\'onish, iliq suv ichish va ibodat vaqti.', icon: '🕌' },
+                    { time: '04:45', activity: 'Qo\'shimcha uyqu', detail: 'Kunlik quvvatni tiklash uchun yengil dam olish.', icon: '😴' },
+                    { time: '07:30', activity: 'Ertalabki uyg\'onish', detail: 'Tana elastikligini oshiruvchi yengil 15 daqiqalik cho\'zilish.', icon: '🧘' },
+                    { time: '08:30', activity: 'Nonushta', detail: 'Suvda pishgan kinoa + avokado + yashil choy.', icon: '🥗' },
+                    { time: '09:00', activity: 'Ish vaqti', detail: 'Kasbiy vazifalarni bajarish', icon: '💼' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Mol go\'shti bilan sabzavotlar.', icon: '🍽️' },
+                    { time: '13:30', activity: 'Peshin namozi', detail: 'Ibodatni o\'z vaqtida ado etish.', icon: '🕌' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Bir hovuch qovoq urug\'i.', icon: '🌻' },
+                    { time: '17:15', activity: 'Asr namozi', detail: 'Asr namozini o\'qish.', icon: '🕌' },
+                    { time: '17:30', activity: 'Asosiy mashq', detail: 'Cho\'zilish va turnik mashqlari.', icon: '💪' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Tovuq filesi + karam salati.', icon: '🍗' },
+                    { time: '19:50', activity: 'Shom namozi', detail: 'Shom namozini o\'qish.', icon: '🕌' },
+                    { time: '20:30', activity: 'Kechki sayr', detail: '40 daqiqa yengil piyoda yurish.', icon: '🚶' },
+                    { time: '21:20', activity: 'Xufton namozi', detail: 'Xufton namozini ado etish.', icon: '🕌' },
+                    { time: '21:45', activity: 'Kitob o\'qish', detail: 'Shaxsiy rivojlanish uchun 30-40 daqiqa.', icon: '📚' },
+                    { time: '22:30', activity: 'Tungi uyqu', detail: 'Chuqur uyqu fazasi uchun.', icon: '🌙' }
+                ]},
+                { day: 1, activities: [
+                    { time: '04:15-07:30', activity: 'Bomdod / Uyqu', detail: 'Bomdod ibodati va uyqu davomi.', icon: '🕌' },
+                    { time: '08:30', activity: 'Nonushta', detail: 'Tuxum omlet + yashil choy.', icon: '🥚' },
+                    { time: '09:00-13:00', activity: 'Ish vaqti', detail: 'Kasbiy va idoraviy majburiyatlar.', icon: '💼' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Baliq sho\'rvasi + javdar noni.', icon: '🐟' },
+                    { time: '13:30', activity: 'Peshin namozi', detail: 'Peshin ibodati.', icon: '🕌' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Yashil olma.', icon: '🍎' },
+                    { time: '17:30', activity: 'Asosiy mashq', detail: 'Kardio va yog\' erish.', icon: '🏋️' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Baqlajon bilan tovuq.', icon: '🍆' },
+                    { time: '21:45', activity: 'Kitob o\'qish', detail: 'Professional adabiyot.', icon: '📚' }
+                ]},
+                { day: 2, activities: [
+                    { time: '08:30', activity: 'Nonushta', detail: 'Ovsyanka + olma + dolchin.', icon: '🥣' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Guruch va tovuq.', icon: '🍚' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Yogurt yoki qatiq.', icon: '🥛' },
+                    { time: '17:30', activity: 'Faol Dam', detail: '1 soat faol yurish.', icon: '🚶' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Kefir + yashil salat.', icon: '🥗' }
+                ]},
+                { day: 3, activities: [
+                    { time: '08:30', activity: 'Nonushta', detail: 'Omlet + bodring.', icon: '🥚' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Mol go\'shti va sabzavotlar.', icon: '🍖' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Bodom mag\'zi.', icon: '🌰' },
+                    { time: '17:30', activity: 'Asosiy mashq', detail: 'Turnik va orqa mushaklari.', icon: '💪' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Tvorog va mevalar.', icon: '🍓' }
+                ]},
+                { day: 4, activities: [
+                    { time: '08:30', activity: 'Nonushta', detail: 'Avokado-tost + tuxum.', icon: '🥑' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Tovuq va sabzavotlar.', icon: '🍲' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Kivi.', icon: '🥝' },
+                    { time: '17:30', activity: 'Raqs / Kardio', detail: '30-40 daqiqa raqs.', icon: '🎵' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Baliq + salat.', icon: '🐠' }
+                ]},
+                { day: 5, activities: [
+                    { time: '08:30', activity: 'Nonushta', detail: 'Ovsyanka + yong\'oq + choy.', icon: '🥜' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Tovuq + grechka + salat.', icon: '🍗' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Qovoq urug\'i.', icon: '🌻' },
+                    { time: '17:30', activity: 'Kuch va Tonus', detail: 'Prisidaniya va planka.', icon: '🏋️' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Baliq + brokkoli.', icon: '🥦' }
+                ]},
+                { day: 6, activities: [
+                    { time: '08:30', activity: 'Nonushta', detail: 'Tuxum + noni + pomidor.', icon: '🥚' },
+                    { time: '13:00', activity: 'Tushlik', detail: 'Tovuq sho\'rvasi.', icon: '🍲' },
+                    { time: '16:30', activity: 'Tamaddi', detail: 'Qatiq.', icon: '🥛' },
+                    { time: '17:30', activity: 'Yoga & Stretch', detail: '30 daqiqa cho\'zilish.', icon: '🧘‍♀️' },
+                    { time: '19:00', activity: 'Kechki ovqat', detail: 'Tvorog zapekanka.', icon: '🍮' }
+                ]}
+            ];
+
+            const [schedule, setSchedule] = useState(() => {
+                const saved = localStorage.getItem('scheduleData');
+                return saved ? JSON.parse(saved) : defaultSchedule;
+            });
+
+            useEffect(() => {
+                localStorage.setItem('scheduleData', JSON.stringify(schedule));
+                localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+            }, [schedule, completedTasks]);
+
+            const toggleTask = (idx) => {
+                const key = `${currentDay}-${idx}`;
+                setCompletedTasks(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                }));
+            };
+
+            const startEdit = (idx) => {
+                setEditingIdx(idx);
+                setEditData({ ...schedule[currentDay].activities[idx] });
+            };
+
+            const saveEdit = () => {
+                const newSchedule = [...schedule];
+                newSchedule[currentDay].activities[editingIdx] = editData;
+                setSchedule(newSchedule);
+                setEditingIdx(null);
+                setEditData(null);
+            };
+
+            const deleteActivity = (idx) => {
+                const newSchedule = [...schedule];
+                newSchedule[currentDay].activities.splice(idx, 1);
+                setSchedule(newSchedule);
+            };
+
+            const addActivity = () => {
+                const newSchedule = [...schedule];
+                newSchedule[currentDay].activities.push({
+                    time: '12:00',
+                    activity: 'Yangi',
+                    detail: 'Tavsif',
+                    icon: '✨'
+                });
+                setSchedule(newSchedule);
+            };
+
+            const moveActivity = (idx, dir) => {
+                const newSchedule = [...schedule];
+                const acts = newSchedule[currentDay].activities;
+                const newIdx = dir === 'up' ? idx - 1 : idx + 1;
+                if (newIdx >= 0 && newIdx < acts.length) {
+                    [acts[idx], acts[newIdx]] = [acts[newIdx], acts[idx]];
+                    setSchedule(newSchedule);
+                }
+            };
+
+            const activities = schedule[currentDay].activities;
+            const completedCount = activities.filter((_, i) => completedTasks[`${currentDay}-${i}`]).length;
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 pb-20">
+                    <div className="max-w-3xl mx-auto mb-6">
+                        <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg p-6 shadow-lg">
+                            <h1 className="text-2xl font-bold mb-2">💚 Sog'lom Lifestyle Rejasi</h1>
+                            <p className="text-green-100 text-sm">Maqsad: 50 kg | Kalori: 1300-1400 kcal</p>
+                            <p className="text-green-100 text-xs mt-1">🌿 Har kuni 1.5-2L toza gazsiz suv</p>
+                        </div>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto mb-6">
+                        <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow">
+                            <button onClick={() => setCurrentDay(d => d === 0 ? 6 : d - 1)} className="text-2xl">◀</button>
+                            <div className="text-center">
+                                <h2 className="text-xl font-bold">{days[currentDay]}</h2>
+                                <p className="text-sm text-gray-500">Kun {currentDay + 1}</p>
+                            </div>
+                            <button onClick={() => setCurrentDay(d => d === 6 ? 0 : d + 1)} className="text-2xl">▶</button>
+                        </div>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto mb-6">
+                        <div className="bg-white rounded-lg p-4 shadow">
+                            <div className="flex justify-between mb-2">
+                                <span className="text-sm font-semibold">Kunlik Rejada</span>
+                                <span className="text-sm font-bold text-green-600">{completedCount}/{activities.length}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-green-500 h-2 rounded-full" style={{ width: `${(completedCount / activities.length) * 100}%` }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto space-y-3">
+                        {activities.map((act, idx) => {
+                            const isCompleted = completedTasks[`${currentDay}-${idx}`];
+                            const isEditing = editingIdx === idx;
+
+                            if (isEditing) {
+                                return (
+                                    <div key={idx} className="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg">
+                                        <input type="text" value={editData.time} onChange={(e) => setEditData({...editData, time: e.target.value})} className="w-full px-3 py-2 border-2 mb-2 rounded" placeholder="Soat" />
+                                        <input type="text" value={editData.activity} onChange={(e) => setEditData({...editData, activity: e.target.value})} className="w-full px-3 py-2 border-2 mb-2 rounded" placeholder="Nomi" />
+                                        <textarea value={editData.detail} onChange={(e) => setEditData({...editData, detail: e.target.value})} className="w-full px-3 py-2 border-2 mb-2 rounded" rows="2" placeholder="Tavsif" />
+                                        <input type="text" value={editData.icon} onChange={(e) => setEditData({...editData, icon: e.target.value})} maxLength="3" className="w-full px-3 py-2 border-2 mb-2 rounded text-2xl" />
+                                        <div className="flex gap-2">
+                                            <button onClick={saveEdit} className="flex-1 bg-green-500 text-white px-4 py-2 rounded font-semibold">✓ Saqlash</button>
+                                            <button onClick={() => setEditingIdx(null)} className="flex-1 bg-gray-500 text-white px-4 py-2 rounded font-semibold">✕ Bekor</button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div key={idx} onClick={() => toggleTask(idx)} className={`p-4 rounded-lg shadow cursor-pointer ${isCompleted ? 'bg-green-100 border-2 border-green-500' : 'bg-white'}`}>
+                                    <div className="flex items-start gap-3 justify-between">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-2xl">{act.icon}</span>
+                                                <div>
+                                                    <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">{act.time}</span>
+                                                    <h3 className="font-bold text-gray-800 ml-2">{act.activity}</h3>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-gray-600 ml-10">{act.detail}</p>
+                                        </div>
+                                        <div className="flex gap-1 flex-shrink-0">
+                                            <button onClick={(e) => { e.stopPropagation(); moveActivity(idx, 'up'); }} disabled={idx === 0} className="text-lg disabled:opacity-30">▲</button>
+                                            <button onClick={(e) => { e.stopPropagation(); moveActivity(idx, 'down'); }} disabled={idx === activities.length - 1} className="text-lg disabled:opacity-30">▼</button>
+                                            <button onClick={(e) => { e.stopPropagation(); startEdit(idx); }} className="text-lg">✏️</button>
+                                            <button onClick={(e) => { e.stopPropagation(); deleteActivity(idx); }} className="text-lg">🗑️</button>
+                                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300'}`}>{isCompleted && '✓'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="max-w-3xl mx-auto mt-6">
+                        <button onClick={addActivity} className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold">➕ Yangi Qo'shish</button>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
